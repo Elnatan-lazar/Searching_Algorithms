@@ -1,6 +1,6 @@
 BFS
 with time
-no open
+with open
 R,R,_
 B,B,_
 G,G,X

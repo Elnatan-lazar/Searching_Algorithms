@@ -2,14 +2,17 @@ import java.awt.*;
 import java.util.Arrays;
 
 public class State {
+    static int genrealIndex=0;
     private char[][] board; // Current board state
     private int cost; // Total cost to reach this state
     private String actions; // Sequence of actions
-
+    private int index;
     State(char[][] board, int cost, String actions) {
         this.board = copyBoard(board);
         this.cost = cost;
         this.actions = actions;
+        genrealIndex++;
+        this.index=genrealIndex;
     }
 
     // Helper to copy the board
@@ -54,6 +57,34 @@ public class State {
     public boolean equals(Object obj) {
         if (!(obj instanceof State other)) return false;
         return Arrays.deepEquals(this.board, other.board);
+    }
+    @Override
+    public String toString() {
+        String boardString="";
+        for (char[] row : this.board) {
+            for (char cell : row) {
+                switch (cell) {
+                    case 'R': // Red
+                        boardString += "\u001B[31m0\u001B[0m"; // ANSI escape code for red
+                        break;
+                    case 'G': // Green
+                        boardString += "\u001B[32m0\u001B[0m"; // ANSI escape code for green
+                        break;
+                    case 'B': // Blue
+                        boardString += "\u001B[34m0\u001B[0m"; // ANSI escape code for blue
+                        break;
+                    case 'X': // Black
+                        boardString += "\u001B[30m0\u001B[0m"; // ANSI escape code for black
+                        break;
+                    case '_': // Empty space
+                        boardString += " ";
+                        break;
+                }
+                boardString += " "; // Add spacing between cells
+            }
+            boardString += "\n"; // Move to the next row
+        }
+        return "------------state numner "+this.index+" ----------"+"\n"+ this.actions + "\n"+"Cost: "+cost+"\n"+ boardString;
     }
 
     @Override

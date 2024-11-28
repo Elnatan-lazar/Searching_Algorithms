@@ -94,49 +94,122 @@ public class Ex1 {
         long endTime = System.currentTimeMillis();
         long elapsedTimeMillis = endTime - startTime; // Time elapsed in milliseconds
         double elapsedTimeSeconds = elapsedTimeMillis / 1000.0; // Convert to seconds
-        writer.write(elapsedTimeSeconds+" seconds"); // writing the time in the forth row
-        writer.flush();
+        if(time){
+            writer.write("\n"+elapsedTimeSeconds+" seconds"); // writing the time in the forth row
+            writer.flush();
+        }
+
 
 
 
 
     }
 
-    public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard) throws IOException {
+    public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
         String operations="";
         int cost=0;
         int numberOfVertices=0;
+        boolean noSolution=false;
 
 
-
-        writer.write(operations + "\n");
-        writer.write("Num: " + numberOfVertices + "\n");
-        writer.write("Cost: " + cost + "\n");
-        writer.flush();
-    }
-
-    public static void DFID(BufferedWriter writer,char[][] board,char[][] goalBoard) throws IOException {
-
-    }
-
-    public static void A_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard) throws IOException {
-
-    }
-
-    public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard) throws IOException {
-
-    }
-    public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard) throws IOException {
+        if (noSolution){
+            writer.write(operations + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " + cost);
+            writer.flush();
+        }
+        else{
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf");
+            writer.flush();
+        }
 
     }
 
+    public static void DFID(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
+        String operations="";
+        int cost=0;
+        int numberOfVertices=0;
+        boolean noSolution=false;
 
 
+        if (noSolution){
+            writer.write(operations + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " + cost);
+            writer.flush();
+        }
+        else{
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf");
+            writer.flush();
+        }
+
+    }
+
+    public static void A_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
+        String operations="";
+        int cost=0;
+        int numberOfVertices=0;
+        boolean noSolution=false;
 
 
+        if (noSolution){
+            writer.write(operations + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " + cost);
+            writer.flush();
+        }
+        else{
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf");
+            writer.flush();
+        }
+    }
+
+    public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
+        String operations="";
+        int cost=0;
+        int numberOfVertices=0;
+        boolean noSolution=false;
 
 
+        if (noSolution){
+            writer.write(operations + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " + cost);
+            writer.flush();
+        }
+        else{
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf");
+            writer.flush();
+        }
+    }
+    public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
+        String operations="";
+        int cost=0;
+        int numberOfVertices=0;
+        boolean noSolution=false;
 
+
+        if (noSolution){
+            writer.write(operations + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " + cost);
+            writer.flush();
+        }
+        else{
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf");
+            writer.flush();
+        }
+    }
 
 
     public static void printBoard(char[][] board) {

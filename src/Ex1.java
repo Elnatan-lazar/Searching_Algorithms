@@ -1,11 +1,11 @@
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Ex1 {
     static final Map<Character, Integer> costTable = new HashMap<>();
@@ -68,24 +68,19 @@ public class Ex1 {
         // Handle algorithm selection
         switch (algo) {
             case "BFS":
-                System.out.println("Running BFS...");
-                // Add BFS implementation here
+                BFS(writer,board,goalBoard,openList);
                 break;
             case "DFID":
-                System.out.println("Running DFID...");
-                // Add DFID implementation here
+                DFID(writer,board,goalBoard,openList);
                 break;
             case "A*":
-                System.out.println("Running A*...");
-                // Add A* implementation here
+                A_STAR(writer,board,goalBoard,openList);
                 break;
             case "IDA*":
-                System.out.println("Running IDA*...");
-                // Add IDA* implementation here
+                IDA_STAR(writer,board,goalBoard,openList);
                 break;
             case "DFBnB":
-                System.out.println("Running DFBnB...");
-                // Add DFBnB implementation here
+                DFBnB(writer,board,goalBoard,openList);
                 break;
             default:
                 System.err.println("Invalid algorithm specified.");
@@ -106,24 +101,127 @@ public class Ex1 {
     }
 
     public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations="";
-        int cost=0;
-        int numberOfVertices=0;
-        boolean noSolution=false;
+        String operations = "";
+        int cost = 0;
+        int numberOfVertices = 0;
+
+        // Directions for circular movement (right, down, left, up)
+        final int[][] DIRECTIONS = {
+                {0, 1}, // Right
+                {1, 0}, // Down
+                {0, -1}, // Left
+                {-1, 0} // Up
+        };
+
+        // BFS setup
+        Queue<State> queue = new LinkedList<>();
+        Set<char[][]> closedSet = new HashSet<>(); // Closed list
+        Set<char[][]> openSet = new HashSet<>(); // Open list
 
 
-        if (noSolution){
+
+        // Initial state
+        State initialState = new State(board, 0, "");
+        queue.add(initialState);
+        // if by lucky the board is also the target board finish the search
+        if (Arrays.deepEquals(board, goalBoard)) {
             writer.write(operations + "\n");
             writer.write("Num: " + numberOfVertices + "\n");
-            writer.write("Cost: " + cost);
+            writer.write("Cost: " +cost + "\n");
             writer.flush();
+            return;
         }
-        else{
-            writer.write("no path\n");
-            writer.write("Num: " + numberOfVertices + "\n");
-            writer.write("Cost: inf");
-            writer.flush();
+
+
+
+
+        while (!queue.isEmpty()) {
+            State current = queue.poll();
+            openSet.remove(current.getBoard());
+            //numberOfVertices++;
+
+            // Add to closed set
+            closedSet.add(current.getBoard());
+
+           // Explore opertion for each cell
+            for (int i = 0; i <3 ; i++) {
+                for (int j = 0; j <3 ; j++) {
+                    Point currentPosition=new Point(i,j);
+                    // Skip if the target cell is blocked (e.g., 'X')
+                    if (current.getBoard()[i][j] == 'X' ||current.getBoard()[i][j]=='_') continue;
+                    Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                    Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                    Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                    Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                    if(current.getValue(left)=='_'){    // if the left position is open add the new state with the new calculation
+
+                        char [][]leftBoard= current.copyBoardWithSwap(currentPosition,left);
+                        if(!openSet.contains(leftBoard) && !closedSet.contains(leftBoard))
+                        {
+
+                            int newCost=current.getCost()+costTable.get(current.getValue(currentPosition));
+                            String newAction= current.getActions();
+                            if (newAction!="")
+                            {
+                                newAction+="--";
+                            }
+                            newAction+="("+ currentPosition.x +","+ currentPosition.y  + "):"
+                                    +current.getValue(currentPosition)
+                                    +":("+ left.x +","+ left.y + ")";
+                            State newState=new State(current.getBoard(),newCost,newAction);
+                            newState.swap(currentPosition,left); // do the move
+
+
+                        }
+
+
+
+                    }
+
+
+                }
+            }
+            for (Point2D emptyCell : current.getEmptyCells()) {
+                for (int[] dir : DIRECTIONS) {
+                    // Circular movement
+                    int newRow = (int) ((emptyCell.getX() + dir[0] + board.length) % board.length);
+                    int newCol = (int) ((emptyCell.getY() + dir[1] + board[0].length) % board[0].length);
+
+
+
+                    // Move the marble
+                    char[][] newBoard = current.copyBoard(current.getBoard());
+                    char movingMarble = newBoard[newRow][newCol];
+                    newBoard[(int) emptyCell.getX()][(int) emptyCell.getY()] = movingMarble;
+                    newBoard[newRow][newCol] = '_';
+
+                    // Update empty cells
+                    List<Point2D> newEmptyCells = new ArrayList<>(current.getEmptyCells());
+                    newEmptyCells.remove(emptyCell);
+                    newEmptyCells.add(new Point2D.Double(newRow, newCol));
+
+                    // Calculate new cost
+                    int newCost = current.getCost() + COSTS.getOrDefault(movingMarble, 0);
+
+                    // Create new state
+                    String newActions = current.getActions() +
+                            "Move " + movingMarble + " from (" + newRow + "," + newCol + ") to (" +
+                            (int) emptyCell.getX() + "," + (int) emptyCell.getY() + ")\n";
+                    State newState = new State(newBoard, newCost, newActions, newEmptyCells);
+
+                    // Add to queue if not already visited or in open set
+                    if (!closedSet.containsKey(newState.getBoardKey()) && !openSet.containsKey(newState.getBoardKey())) {
+                        queue.add(newState);
+                        openSet.put(newState.getBoardKey(), newState);
+                    }
+                }
+            }
         }
+
+        writer.write("no path\n");
+        writer.write("Num: " + numberOfVertices + "\n");
+        writer.write("Cost: inf\n");
+        writer.flush();
 
     }
 
@@ -175,6 +273,8 @@ public class Ex1 {
         int cost=0;
         int numberOfVertices=0;
         boolean noSolution=false;
+
+
 
 
         if (noSolution){

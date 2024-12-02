@@ -7,12 +7,20 @@ public class State {
     private int cost; // Total cost to reach this state
     private String actions; // Sequence of actions
     private int index;
+    private boolean isOut;
     State(char[][] board, int cost, String actions) {
         this.board = copyBoard(board);
         this.cost = cost;
         this.actions = actions;
         genrealIndex++;
         this.index=genrealIndex;
+        this.isOut=false;
+    }
+    public boolean getIsOut(){
+        return isOut;
+    }
+    public void setOut(){
+        isOut=true;
     }
 
     // Helper to copy the board
@@ -89,6 +97,7 @@ public class State {
 
     @Override
     public int hashCode() {
+
         return Arrays.deepHashCode(this.board);
     }
     public char[][] getBoard(){
@@ -101,6 +110,16 @@ public class State {
 
     public String getActions() {
         return actions;
+    }
+
+    public static String boardToString(char[][] board) {
+        StringBuilder sb = new StringBuilder();
+        for (char[] row : board) {
+            for (char cell : row) {
+                sb.append(cell);
+            }
+        }
+        return sb.toString();
     }
 }
 

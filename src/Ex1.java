@@ -20,7 +20,7 @@ public class Ex1 {
 
 
     public static void main(String[] args) throws IOException {
-        String fileName = "src\\input.txt";
+        String fileName = "input.txt";
         List<String> lines = null;
 
         // Read the input file
@@ -116,8 +116,8 @@ public class Ex1 {
 
         // BFS setup
         Queue<State> queue = new LinkedList<>();
-        Set<char[][]> closedSet = new HashSet<>(); // Closed list
-        Set<char[][]> openSet = new HashSet<>(); // Open list
+        Set<String> closedSet = new HashSet<>(); // Closed list
+        Set<String> openSet = new HashSet<>(); // Open list
 
 
 
@@ -138,16 +138,16 @@ public class Ex1 {
 
         while (!queue.isEmpty()) {
             if(openList){
-                System.out.println("######### open-list #####3##");
+                System.out.println("######### open-list ########");
                for( State s:queue){
                    System.out.println(s);
 
                }
             }
             State current = queue.poll();
-            openSet.remove(current.getBoard());
+            openSet.remove(State.boardToString(current.getBoard()));
             // Add to closed set
-            closedSet.add(current.getBoard());
+            closedSet.add(State.boardToString(current.getBoard()));
 
            // Explore opertion for each cell
             for (int i = 0; i <3 ; i++) {
@@ -169,10 +169,14 @@ public class Ex1 {
                         if(current.getValue(p)=='_'){    // if the left position is open add the new state with the new calculation
 
                             char [][]newBoard= current.copyBoardWithSwap(currentPosition,p);
+                            numberOfVertices++;
+                            String boardKey=State.boardToString(newBoard);
 
                             if(!openSet.contains(newBoard) && !closedSet.contains(newBoard)) // if the new state not in the open or close list add it
                             {
-                                numberOfVertices++; // update the number of vertices
+
+
+                                 // update the number of vertices
                                 int newCost=current.getCost()+costTable.get(current.getValue(currentPosition));
                                 String newAction= current.getActions();
                                 if (newAction!="")
@@ -194,7 +198,7 @@ public class Ex1 {
                                     return;
                                 }
 
-                                openSet.add(newBoard);
+                                openSet.add(State.boardToString(newBoard));
                                 queue.add(newState);
 
 
@@ -235,25 +239,143 @@ public class Ex1 {
 
     }
 
+    public static int hurstic(char[][] board,char[][] goalBoard){
+        // the huristic function
+        return 1;
+    }
+
     public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations="";
+        String result="";
         int cost=0;
         int numberOfVertices=0;
-        boolean noSolution=false;
+
+
+        int trashHold=hurstic(board,goalBoard);
+        Stack<State> stack=new Stack<>();
+        Map<State,State> hashMap = new HashMap<State,State>(); // Closed list
+        State initialState = new State(board, 0, "");
+
+        // if by lucky the board is also the target board finish the search
+        if (Arrays.deepEquals(board, goalBoard)) {
+            writer.write(result + "\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: " +cost + "\n");
+            writer.flush();
+            return;
+        }
+
+        while (trashHold!=Integer.MAX_VALUE)
+        {
+            int minF=Integer.MAX_VALUE;
+            stack.add(initialState);
+            hashMap.put(initialState,initialState);
+            while(!stack.isEmpty())
+            {
+                State currentNode=stack.pop();
+                if(currentNode.getIsOut())
+                {
+                    hashMap.remove(currentNode);
+                }
+                else
+                {
+                    currentNode.setOut();
+                    stack.add(currentNode);
+                    ArrayList<State> allPossiboleOpretors=new ArrayList<>();
+                    for (int i = 0; i <3 ; i++) {
+                        for (int j = 0; j <3 ; j++) {
+                            Point currentPosition=new Point(i,j);
+                            // Skip if the target cell isn't a ball.
+                            if (currentNode.getBoard()[i][j] == 'X' ||currentNode.getBoard()[i][j]=='_') continue;
+                            Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                            Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                            Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                            Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                            ArrayList<Point> points=new ArrayList<>();
+                            points.add(left);
+                            points.add(right);
+                            points.add(up);
+                            points.add(down);
+                            for(Point p:points)     // checking all the possible direction
+                            {
+                                if(currentNode.getValue(p)=='_'){    // if the left position is open add the new state with the new calculation
+
+                                    char [][]newBoard= currentNode.copyBoardWithSwap(currentPosition,p);
+
+                                        numberOfVertices++; // update the number of vertices
+                                        int newCost=currentNode.getCost()+costTable.get(currentNode.getValue(currentPosition));
+                                        String newAction= currentNode.getActions();
+                                        if (newAction!="")
+                                        {
+                                            newAction+="--";
+                                        }
+                                        newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
+                                                +currentNode.getValue(currentPosition)
+                                                +":("+ (p.x+1) +","+ (p.y+1) + ")";
+                                        State newState=new State(newBoard,newCost,newAction);
+                                        allPossiboleOpretors.add(newState);
+
+                                }
+
+                            }
+                        }
+                    }
+                    for(State G:allPossiboleOpretors)
+                    {
+                        int FG=G.getCost()+hurstic(G.getBoard(),goalBoard);
+                        if(FG >trashHold)
+                        {
+                            minF=Math.min(minF,FG);
+                            continue;
+                        }
+                        if (hashMap.containsKey(G) && !G.getIsOut())
+                        {
+                            if(hashMap.get(G).getCost()>G.getCost()) // becuse the hurstic function will return the samfe for both of the we will comperf only g(G) == cost
+                            {
+                                stack.remove(hashMap.get(G));
+                                hashMap.remove(G);
+
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                        if(Arrays.deepEquals(G.getBoard(), goalBoard))  // if we reach to the goal
+                        {
+                            writer.write(G.getActions() + "\n");
+                            writer.write("Num: " + numberOfVertices + "\n");
+                            writer.write("Cost: " + G.getCost() + "\n");
+                            writer.flush();
+                            return;
+                        }
+                        stack.add(G);
+                        hashMap.put(G,G);
+                    }
+                }
+
+                }
+            trashHold=minF;
+            }
+        writer.write("no path\n");
+        writer.write("Num: " + numberOfVertices + "\n");
+        writer.write("Cost: inf\n");
+        writer.flush();
+        return;
+
+        }
 
 
 
 
-    }
+
     public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations="";
-        int cost=0;
-        int numberOfVertices=0;
-        boolean noSolution=false;
+
+        }
 
 
 
-    }
+
+
 
 
     public static void printBoard(char[][] board) {

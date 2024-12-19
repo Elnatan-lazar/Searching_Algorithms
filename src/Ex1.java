@@ -22,7 +22,6 @@ public class Ex1 {
     public static void main(String[] args) throws IOException {
         String fileName = "input.txt";
         List<String> lines = null;
-
         // Read the input file
         try {
             lines = Files.readAllLines(Paths.get(fileName));
@@ -65,6 +64,17 @@ public class Ex1 {
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
         long startTime = System.currentTimeMillis();
+
+        // in case we got lucky and the input is the answer
+        if (Arrays.deepEquals(board, goalBoard)) {
+            writer.write("\n");
+            writer.write("Num: " + 0 + "\n");
+            writer.write("Cost: " +0 + "\n");
+            writer.flush();
+            return;
+        }
+
+
         // Handle algorithm selection
         switch (algo) {
             case "BFS":
@@ -101,266 +111,256 @@ public class Ex1 {
 
     }
 
-    public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations = "";
-        int cost = 0;
+    public static int hurstic(char[][] board,char[][] goalBoard){
+        int cost=0;
+        for (int i = 0; i < goalBoard.length ; i++) {
+            for (int j = 0; j <goalBoard[0].length ; j++) {
+                if (goalBoard[i][j]!='X' && goalBoard[i][j]!='_'&&goalBoard[i][j]!=board[i][j]){
+                    cost+=costTable.get(goalBoard[i][j]);
+                }
+            }
+        }
+        return  cost;
+    }
+
+    public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
         int numberOfVertices = 0;
-
-        // Directions for circular movement (right, down, left, up)
-        final int[][] DIRECTIONS = {
-                {0, 1}, // Right
-                {1, 0}, // Down
-                {0, -1}, // Left
-                {-1, 0} // Up
-        };
-
         // BFS setup
         Queue<State> queue = new LinkedList<>();
-        Set<String> closedSet = new HashSet<>(); // Closed list
-        Set<String> openSet = new HashSet<>(); // Open list
-
+        Set<State> closedSet = new HashSet<>(); // Closed list
+        Set<State> openSet = new HashSet<>(); // Open list
 
 
         // Initial state
         State initialState = new State(board, 0, "");
         queue.add(initialState);
-        // if by lucky the board is also the target board finish the search
-        if (Arrays.deepEquals(board, goalBoard)) {
-            writer.write(operations + "\n");
-            writer.write("Num: " + numberOfVertices + "\n");
-            writer.write("Cost: " +cost + "\n");
-            writer.flush();
-            return;
-        }
-
 
 
 
         while (!queue.isEmpty()) {
-            if(openList){
+
+            if(withoOpenList){
                 System.out.println("######### open-list ########");
                for( State s:queue){
                    System.out.println(s);
 
                }
             }
-            State current = queue.poll();
-            openSet.remove(State.boardToString(current.getBoard()));
+            State currentState = queue.poll();
+            openSet.remove(currentState);
+
             // Add to closed set
-            closedSet.add(State.boardToString(current.getBoard()));
+            closedSet.add(currentState);
 
            // Explore opertion for each cell
             for (int i = 0; i <3 ; i++) {
                 for (int j = 0; j <3 ; j++) {
                     Point currentPosition=new Point(i,j);
-                    // Skip if the target cell isn't a ball.
-                    if (current.getBoard()[i][j] == 'X' ||current.getBoard()[i][j]=='_') continue;
+
+                    // Skip if the target cell isn't a marble.
+                    if (currentState.getBoard()[i][j] == 'X' ||currentState.getBoard()[i][j]=='_')
+                    {
+                        continue;
+                    }
+
                     Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
                     Point right = new Point((i + 1) % 3, j);     // Right neighbor
                     Point up = new Point(i, (j + 1) % 3);        // Up neighbor
                     Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
                     ArrayList<Point> points=new ArrayList<>();
                     points.add(left);
-                    points.add(right);
                     points.add(up);
+                    points.add(right);
                     points.add(down);
-                    for(Point p:points)     // checking all the possible direction
+
+                    for(Point p:points)     // checking all the possible direction for each coordinate in the board
                     {
-                        if(current.getValue(p)=='_'){    // if the left position is open add the new state with the new calculation
-
-                            char [][]newBoard= current.copyBoardWithSwap(currentPosition,p);
-                            numberOfVertices++;
-                            String boardKey=State.boardToString(newBoard);
-
-                            if(!openSet.contains(newBoard) && !closedSet.contains(newBoard)) // if the new state not in the open or close list add it
-                            {
-
-
-                                 // update the number of vertices
-                                int newCost=current.getCost()+costTable.get(current.getValue(currentPosition));
-                                String newAction= current.getActions();
-                                if (newAction!="")
-                                {
-                                    newAction+="--";
-                                }
-                                newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
-                                        +current.getValue(currentPosition)
-                                        +":("+ (p.x+1) +","+ (p.y+1) + ")";
-                                State newState=new State(newBoard,newCost,newAction);
-
-
-                                if(Arrays.deepEquals(newBoard, goalBoard))  // if we reach to the goal
-                                {
-                                    writer.write(newState.getActions() + "\n");
-                                    writer.write("Num: " + numberOfVertices + "\n");
-                                    writer.write("Cost: " + newState.getCost() + "\n");
-                                    writer.flush();
-                                    return;
-                                }
-
-                                openSet.add(State.boardToString(newBoard));
-                                queue.add(newState);
-
-
-                                }
-
-                            }
-
-                        }
-                    }
-                }
-            }
-
-
-        writer.write("no path\n");
-        writer.write("Num: " + numberOfVertices + "\n");
-        writer.write("Cost: inf\n");
-        writer.flush();
-
-    }
-
-    public static void DFID(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations="";
-        int cost=0;
-        int numberOfVertices=0;
-        boolean noSolution=false;
-
-
-
-    }
-
-    public static void A_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String operations="";
-        int cost=0;
-        int numberOfVertices=0;
-        boolean noSolution=false;
-
-
-
-    }
-
-    public static int hurstic(char[][] board,char[][] goalBoard){
-        // the huristic function
-        return 1;
-    }
-
-    public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
-        String result="";
-        int cost=0;
-        int numberOfVertices=0;
-
-
-        int trashHold=hurstic(board,goalBoard);
-        Stack<State> stack=new Stack<>();
-        Map<State,State> hashMap = new HashMap<State,State>(); // Closed list
-        State initialState = new State(board, 0, "");
-
-        // if by lucky the board is also the target board finish the search
-        if (Arrays.deepEquals(board, goalBoard)) {
-            writer.write(result + "\n");
-            writer.write("Num: " + numberOfVertices + "\n");
-            writer.write("Cost: " +cost + "\n");
-            writer.flush();
-            return;
-        }
-
-        while (trashHold!=Integer.MAX_VALUE)
-        {
-            int minF=Integer.MAX_VALUE;
-            stack.add(initialState);
-            hashMap.put(initialState,initialState);
-            while(!stack.isEmpty())
-            {
-                State currentNode=stack.pop();
-                if(currentNode.getIsOut())
-                {
-                    hashMap.remove(currentNode);
-                }
-                else
-                {
-                    currentNode.setOut();
-                    stack.add(currentNode);
-                    ArrayList<State> allPossiboleOpretors=new ArrayList<>();
-                    for (int i = 0; i <3 ; i++) {
-                        for (int j = 0; j <3 ; j++) {
-                            Point currentPosition=new Point(i,j);
-                            // Skip if the target cell isn't a ball.
-                            if (currentNode.getBoard()[i][j] == 'X' ||currentNode.getBoard()[i][j]=='_') continue;
-                            Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
-                            Point right = new Point((i + 1) % 3, j);     // Right neighbor
-                            Point up = new Point(i, (j + 1) % 3);        // Up neighbor
-                            Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
-                            ArrayList<Point> points=new ArrayList<>();
-                            points.add(left);
-                            points.add(right);
-                            points.add(up);
-                            points.add(down);
-                            for(Point p:points)     // checking all the possible direction
-                            {
-                                if(currentNode.getValue(p)=='_'){    // if the left position is open add the new state with the new calculation
-
-                                    char [][]newBoard= currentNode.copyBoardWithSwap(currentPosition,p);
-
-                                        numberOfVertices++; // update the number of vertices
-                                        int newCost=currentNode.getCost()+costTable.get(currentNode.getValue(currentPosition));
-                                        String newAction= currentNode.getActions();
-                                        if (newAction!="")
-                                        {
-                                            newAction+="--";
-                                        }
-                                        newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
-                                                +currentNode.getValue(currentPosition)
-                                                +":("+ (p.x+1) +","+ (p.y+1) + ")";
-                                        State newState=new State(newBoard,newCost,newAction);
-                                        allPossiboleOpretors.add(newState);
-
-                                }
-
-                            }
-                        }
-                    }
-                    for(State G:allPossiboleOpretors)
-                    {
-                        int FG=G.getCost()+hurstic(G.getBoard(),goalBoard);
-                        if(FG >trashHold)
-                        {
-                            minF=Math.min(minF,FG);
+                        if(currentState.getValue(p)!='_'){
                             continue;
                         }
-                        if (hashMap.containsKey(G) && !G.getIsOut())
-                        {
-                            if(hashMap.get(G).getCost()>G.getCost()) // becuse the hurstic function will return the samfe for both of the we will comperf only g(G) == cost
-                            {
-                                stack.remove(hashMap.get(G));
-                                hashMap.remove(G);
 
-                            }
-                            else
-                            {
-                                continue;
-                            }
+                        //check if it a revers action if it skip the action
+                        if(currentState.isReversedAction(i,j,p)){
+                            continue;
                         }
-                        if(Arrays.deepEquals(G.getBoard(), goalBoard))  // if we reach to the goal
+                        // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
+                        char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
+                        // update the number of vertices
+                        int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
+                        String newAction= currentState.getActions();
+                        if (newAction!="")
                         {
-                            writer.write(G.getActions() + "\n");
-                            writer.write("Num: " + numberOfVertices + "\n");
-                            writer.write("Cost: " + G.getCost() + "\n");
-                            writer.flush();
-                            return;
+                            newAction+="--";
                         }
-                        stack.add(G);
-                        hashMap.put(G,G);
+                        newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
+                                +currentState.getValue(currentPosition)
+                                +":("+ (p.x+1) +","+ (p.y+1) + ")";
+                        State newState=new State(newBoard,newCost,newAction);
+                        newState.setLastAction(i,j,p);
+                        numberOfVertices++;
+
+                        if(!openSet.contains(newState) && !closedSet.contains(newState)) // if the new state not in the open or close list add it
+                        {
+
+                            if(Arrays.deepEquals(newBoard, goalBoard))  // if we reach to the goal
+                            {
+                                writer.write(newState.getActions() + "\n");
+                                writer.write("Num: " + numberOfVertices + "\n");
+                                writer.write("Cost: " + newState.getCost() + "\n");
+                                writer.flush();
+                                return;
+                            }
+
+                            openSet.add(newState);
+                            queue.add(newState);
+
+
+                        }
+
+                    }
                     }
                 }
-
-                }
-            trashHold=minF;
             }
+        // if we reach here there is no selution and no more pisoobole move that we havent try.
         writer.write("no path\n");
         writer.write("Num: " + numberOfVertices + "\n");
         writer.write("Cost: inf\n");
         writer.flush();
-        return;
+
+    }
+
+    public static void DFID(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
+        int numberOfVertices=0;
+
+        for (int depth = 1; depth <Integer.MAX_VALUE ; depth++)
+        {
+            State initialState = new State(board, 0, "");
+            Set<State> HashTable=new HashSet<>();
+
+            //0 == cutoff
+            //1 == no solution
+            //2 == solution found
+            int result=limited_DFS(writer,initialState,goalBoard,depth,HashTable,withoOpenList);
+
+            //if the answer is a path or a fail stop the fucntion (the solution will be flash in the limited_DFS function
+            if(result != 0){
+                if(result==1){
+                    writer.write("no path\n");
+                    writer.write("Num: " + (State.genrealIndex-1) + "\n");
+                    writer.write("Cost: inf\n");
+                    writer.flush();
+                }
+                return;
+            }
+
+
+        }
+
+    }
+    public static int limited_DFS(BufferedWriter writer,State currentState,char[][] goalBoard,int limit,Set<State> HashTable,boolean withoOpenList) throws IOException{
+        if(Arrays.deepEquals(currentState.getBoard(), goalBoard))  // if we reach to the goal
+        {
+            writer.write(currentState.getActions() + "\n");
+            writer.write("Num: " + (State.genrealIndex-1) + "\n");
+            writer.write("Cost: " + currentState.getCost() + "\n");
+            writer.flush();
+            return 2;
+        }
+        if (limit==0){
+            return 0;
+        }
+        HashTable.add(currentState);
+        boolean isCutoff = false;
+
+
+        // Explore opertion for each cell
+        for (int i = 0; i <3 ; i++) {
+            for (int j = 0; j <3 ; j++) {
+                Point currentPosition=new Point(i,j);
+
+                // Skip if the target cell isn't a marble.
+                if (currentState.getBoard()[i][j] == 'X' ||currentState.getBoard()[i][j]=='_')
+                {
+                    continue;
+                }
+
+                Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                ArrayList<Point> points=new ArrayList<>();
+                points.add(left);
+                points.add(up);
+                points.add(right);
+                points.add(down);
+
+                for(Point p:points)     // checking all the possible direction for each coordinate in the board
+                {
+                    if(currentState.getValue(p)!='_'){
+                        continue;
+                    }
+
+                    //check if it a revers action if it skip the action
+                    if(currentState.isReversedAction(i,j,p)){
+                        continue;
+                    }
+                    // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
+                    char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
+                    // update the number of vertices
+                    int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
+                    String newAction= currentState.getActions();
+                    if (newAction!="")
+                    {
+                        newAction+="--";
+                    }
+                    newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
+                            +currentState.getValue(currentPosition)
+                            +":("+ (p.x+1) +","+ (p.y+1) + ")";
+                    State newState=new State(newBoard,newCost,newAction);
+                    newState.setLastAction(i,j,p);
+
+                    if(HashTable.contains(newState))
+                    {
+                        continue;
+                    }
+
+                    //0 == cutoff
+                    //1 == no solution
+                    //2 == solution found
+                    int result=limited_DFS( writer,newState,goalBoard,limit-1,HashTable,withoOpenList);
+
+                    if(result ==0){
+                        isCutoff=true;
+                    }
+                    if(result ==2){
+                        return  2;
+                    }
+
+                }
+            }
+        }
+        HashTable.remove(currentState);
+        if(isCutoff == true){
+            return 0;
+        }
+        else{
+
+            return 0;
+        }
+
+
+
+    }
+
+
+
+    public static void A_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
+
+    }
+
+
+
+    public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
 
         }
 
@@ -368,7 +368,7 @@ public class Ex1 {
 
 
 
-    public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean openList) throws IOException {
+    public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
 
         }
 

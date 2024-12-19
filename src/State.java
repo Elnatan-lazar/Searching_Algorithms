@@ -1,13 +1,18 @@
 import java.awt.*;
 import java.util.Arrays;
 
-public class State {
+public class State implements Comparable<State>{
     static int genrealIndex=0;
     private char[][] board; // Current board state
     private int cost; // Total cost to reach this state
     private String actions; // Sequence of actions
     private int index;
+    private int F=0;
+    private int hursticValue=0;
     private boolean isOut;
+    private String[] lastAction;
+
+
     State(char[][] board, int cost, String actions) {
         this.board = copyBoard(board);
         this.cost = cost;
@@ -15,6 +20,43 @@ public class State {
         genrealIndex++;
         this.index=genrealIndex;
         this.isOut=false;
+        lastAction=new String[3];
+    }
+
+    public void setLastAction(int i,int j,Point To){
+        // the array will remember the origin location the destination and the collor of the last action
+        lastAction[0]=Character.toString(this.board[To.x][To.y]);
+        lastAction[1]=Integer.toString(i)+","+Integer.toString(j);
+        lastAction[2]=Integer.toString(To.x)+","+Integer.toString(To.y);
+    }
+    public boolean isReversedAction(int i,int j,Point to){
+        //c == color
+        //f == from
+        //t == to
+        String c=Character.toString(this.board[i][j]);
+        String f=lastAction[1]=Integer.toString(i)+","+Integer.toString(j);
+        String t=lastAction[1]=Integer.toString(to.x)+","+Integer.toString(to.y);
+
+        // if the color of this action is the same as the last action
+        // & the origin location of this action is the same as the distinction of the last action
+        // & the destination of this action is the same as the origin location of the last action
+        // it mean this is a reversed action
+        return c.equals(lastAction[0])  && f.equals(lastAction[2])&&t.equals(lastAction[1]) ;
+
+
+    }
+
+    public int getF(){
+        return  F;
+    }
+    public void setF(int f){
+        F=f;
+    }
+    public int getHursticValue(){
+        return  hursticValue;
+    }
+    public void setHursticValue(int hursticValue){
+        this.hursticValue=hursticValue;
     }
     public boolean getIsOut(){
         return isOut;
@@ -120,6 +162,11 @@ public class State {
             }
         }
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(State o) {
+        return Integer.compare(this.F,o.F);
     }
 }
 

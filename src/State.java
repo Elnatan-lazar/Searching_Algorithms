@@ -65,6 +65,9 @@ public class State implements Comparable<State>{
     public void setOut(){
         isOut=true;
     }
+    public void setNotOut(){
+        isOut=false;
+    }
 
     // Helper to copy the board
     private char[][] copyBoard(char[][] original) {

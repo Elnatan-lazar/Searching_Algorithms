@@ -1,4 +1,4 @@
-DFBnB
+A*
 with time
 no open
 _,B,R

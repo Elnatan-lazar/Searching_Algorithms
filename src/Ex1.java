@@ -77,24 +77,15 @@ public class Ex1 {
 
         // Handle algorithm selection
         switch (algo) {
-            case "BFS":
-                BFS(writer,board,goalBoard,openList);
-                break;
-            case "DFID":
-                DFID(writer,board,goalBoard,openList);
-                break;
-            case "A*":
-                A_STAR(writer,board,goalBoard,openList);
-                break;
-            case "IDA*":
-                IDA_STAR(writer,board,goalBoard,openList);
-                break;
-            case "DFBnB":
-                DFBnB(writer,board,goalBoard,openList);
-                break;
-            default:
+            case "BFS" -> BFS(writer, board, goalBoard, openList);
+            case "DFID" -> DFID(writer, board, goalBoard, openList);
+            case "A*" -> A_STAR(writer, board, goalBoard, openList);
+            case "IDA*" -> IDA_STAR(writer, board, goalBoard, openList);
+            case "DFBnB" -> DFBnB(writer, board, goalBoard, openList);
+            default -> {
                 System.err.println("Invalid algorithm specified.");
                 return;
+            }
         }
         long endTime = System.currentTimeMillis();
         long elapsedTimeMillis = endTime - startTime; // Time elapsed in milliseconds
@@ -236,6 +227,7 @@ public class Ex1 {
 
         for (int depth = 1; depth <Integer.MAX_VALUE ; depth++)
         {
+
             State initialState = new State(board, 0, "");
             Set<State> HashTable=new HashSet<>();
 
@@ -260,6 +252,7 @@ public class Ex1 {
 
     }
     public static int limited_DFS(BufferedWriter writer,State currentState,char[][] goalBoard,int limit,Set<State> HashTable,boolean withoOpenList) throws IOException{
+
         if(Arrays.deepEquals(currentState.getBoard(), goalBoard))  // if we reach to the goal
         {
             writer.write(currentState.getActions() + "\n");
@@ -273,7 +266,13 @@ public class Ex1 {
         }
         HashTable.add(currentState);
         boolean isCutoff = false;
+        if(withoOpenList){
+            System.out.println("######### open-list ########");
+            for( State s:HashTable){
+                System.out.println(s);
 
+            }
+        }
 
         // Explore opertion for each cell
         for (int i = 0; i <3 ; i++) {
@@ -357,14 +356,244 @@ public class Ex1 {
 
 
     public static void A_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
+        int numberOfVertices = 0;
 
+        Comparator<State> compere=new Comparator<State>() {
+            @Override
+            public int compare(State o1, State o2) {
+                return Integer.compare(o1.getF(),o2.getF());
+            }
+        };
+
+        Queue<State> queue=new PriorityQueue<>(compere);
+        HashMap<State, State> closeList = new HashMap<>();
+        HashMap<State, State> openList= new HashMap<>();
+
+        State initialState = new State(board, 0, "");
+        initialState.setHursticValue(hurstic(board,goalBoard));
+        queue.add(initialState);
+        openList.put(initialState,initialState);
+        while (!queue.isEmpty()) {
+            if(withoOpenList){
+                System.out.println("######### open-list ########");
+                for( State s:queue){
+                    System.out.println(s);
+
+                }
+            }
+
+            State currentState=queue.poll();
+            openList.remove(currentState);
+            closeList.put(currentState,currentState);
+            if(Arrays.deepEquals(currentState.getBoard(),goalBoard)){
+                writer.write(currentState.getActions()+"\n");
+                writer.write("Num: " + numberOfVertices + "\n");
+                writer.write("Cost: "+currentState.getCost()+"\n");
+                writer.flush();
+                return;
+            }
+
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            Point currentPosition = new Point(i, j);
+
+                            // Skip if the target cell isn't a marble.
+                            if (currentState.getBoard()[i][j] == 'X' || currentState.getBoard()[i][j] == '_') {
+                                continue;
+                            }
+
+                            Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                            Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                            Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                            Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                            ArrayList<Point> points = new ArrayList<>();
+                            points.add(left);
+                            points.add(up);
+                            points.add(right);
+                            points.add(down);
+
+                            for (Point p : points)     // checking all the possible direction for each coordinate in the board
+                            {
+                                if (currentState.getValue(p) != '_') {
+                                    continue;
+                                }
+
+                                //check if it a revers action if it skip the action
+                                if (currentState.isReversedAction(i, j, p)) {
+                                    continue;
+                                }
+                                // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
+                                char[][] newBoard = currentState.copyBoardWithSwap(currentPosition, p);
+                                // update the number of vertices
+                                int newCost = currentState.getCost() + costTable.get(currentState.getValue(currentPosition));
+                                String newAction = currentState.getActions();
+                                if (newAction != "") {
+                                    newAction += "--";
+                                }
+                                newAction += "(" + (currentPosition.x + 1) + "," + (currentPosition.y + 1) + "):"
+                                        + currentState.getValue(currentPosition)
+                                        + ":(" + (p.x + 1) + "," + (p.y + 1) + ")";
+                                State newState = new State(newBoard, newCost, newAction);
+                                newState.setLastAction(i, j, p);
+                                newState.setHursticValue(hurstic(newState.getBoard(), goalBoard));
+                                numberOfVertices++;
+
+                                if(closeList.containsKey(newState) ){
+                                    continue;
+                                }
+
+                                if(!openList.containsKey(newState)){
+                                    openList.put(newState,newState);
+                                }
+                                else if(newState.getCost()>= openList.get(newState).getCost()){
+                                    continue;
+                                }
+                                openList.remove(newState,newState);
+                                openList.put(newState,newState);
+                                queue.add(newState);
+
+
+
+
+                            }
+                        }
+                    }
+
+
+        }
+
+        writer.write("no path\n");
+        writer.write("Num: " + numberOfVertices + "\n");
+        writer.write("Cost: inf\n");
+        writer.flush();
     }
 
 
 
     public static void IDA_STAR(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
+        int numberOfVertices = 0;
+        Stack<State> stack = new Stack<>();
+        HashMap<State, State> hashMap = new HashMap<>();
+        int thresHold = hurstic(goalBoard, goalBoard);
+        State initialState = new State(board, 0, "");
+        initialState.setHursticValue(hurstic(board,goalBoard));
+        while (thresHold != Integer.MAX_VALUE) {
 
+            if(withoOpenList){
+                System.out.println("######### open-list ########");
+                for( State s:stack){
+                    System.out.println(s);
+
+                }
+            }
+            initialState.setNotOut();
+            stack.add(initialState);
+            hashMap.put(initialState, initialState);
+            int minF = Integer.MAX_VALUE;
+            while (!stack.isEmpty()) {
+                State currentState = stack.pop();
+                if (currentState.getIsOut()) {
+                    hashMap.remove(currentState, currentState);
+                }
+                else {
+                    currentState.setOut();
+                    stack.add(currentState);
+                    ArrayList<State> nodes = new ArrayList<>();
+                    // Explore opertion for each cell
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            Point currentPosition = new Point(i, j);
+
+                            // Skip if the target cell isn't a marble.
+                            if (currentState.getBoard()[i][j] == 'X' || currentState.getBoard()[i][j] == '_') {
+                                continue;
+                            }
+
+                            Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                            Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                            Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                            Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                            ArrayList<Point> points = new ArrayList<>();
+                            points.add(left);
+                            points.add(up);
+                            points.add(right);
+                            points.add(down);
+
+                            for (Point p : points)     // checking all the possible direction for each coordinate in the board
+                            {
+                                if (currentState.getValue(p) != '_') {
+                                    continue;
+                                }
+
+                                //check if it a revers action if it skip the action
+                                if (currentState.isReversedAction(i, j, p)) {
+                                    continue;
+                                }
+                                // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
+                                char[][] newBoard = currentState.copyBoardWithSwap(currentPosition, p);
+                                // update the number of vertices
+                                int newCost = currentState.getCost() + costTable.get(currentState.getValue(currentPosition));
+                                String newAction = currentState.getActions();
+                                if (newAction != "") {
+                                    newAction += "--";
+                                }
+                                newAction += "(" + (currentPosition.x + 1) + "," + (currentPosition.y + 1) + "):"
+                                        + currentState.getValue(currentPosition)
+                                        + ":(" + (p.x + 1) + "," + (p.y + 1) + ")";
+                                State newState = new State(newBoard, newCost, newAction);
+                                newState.setLastAction(i, j, p);
+                                newState.setHursticValue(hurstic(newState.getBoard(), goalBoard));
+                                numberOfVertices++;
+                                nodes.add(newState);
+
+                            }
+                        }
+                    }
+
+                    for (State node:nodes) {
+
+                        if (node.getF() > thresHold) {
+                            minF=Integer.min(minF,node.getF());
+                            continue;
+                        }
+                        if (hashMap.containsKey(node) && hashMap.get(node).getIsOut()) {
+                            continue;
+                        } else if (hashMap.containsKey(node) && !hashMap.get(node).getIsOut()) {
+                            if (hashMap.get(node).getF()> node.getF()) {
+                                stack.remove(hashMap.get(node));
+                                hashMap.remove(node, node);
+                            } else {
+                                continue;
+
+                            }
+                        }
+                        if (Arrays.deepEquals(node.getBoard(), goalBoard)) {
+                            writer.write(node.getActions() + "\n");
+                            writer.write("Num: " + numberOfVertices + "\n");
+                            writer.write("Cost: " + node.getCost() + "\n");
+                            writer.flush();
+                            return;
+                        }
+                        stack.add(node);
+                        hashMap.put(node,node);
+
+
+                    }
+
+                }
+            }
+            thresHold=minF;
+            if(thresHold==Integer.MAX_VALUE){
+                System.out.println("123");
+            }
+            }
+
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf\n");
+            writer.flush();
         }
+
 
 
 
@@ -381,6 +610,13 @@ public class Ex1 {
         hashMap.put(initialState,initialState);
         while (!stack.isEmpty())
         {
+            if(withoOpenList){
+                System.out.println("######### open-list ########");
+                for( State s:stack){
+                    System.out.println(s);
+
+                }
+            }
             State currentState=stack.pop();
             if(currentState.getIsOut()){
                 hashMap.remove(currentState,currentState);

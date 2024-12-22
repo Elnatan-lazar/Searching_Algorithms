@@ -116,7 +116,9 @@ public class Ex1 {
         for (int i = 0; i < goalBoard.length ; i++) {
             for (int j = 0; j <goalBoard[0].length ; j++) {
                 if (goalBoard[i][j]!='X' && goalBoard[i][j]!='_'&&goalBoard[i][j]!=board[i][j]){
+
                     cost+=costTable.get(goalBoard[i][j]);
+
                 }
             }
         }

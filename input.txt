@@ -1,9 +1,9 @@
-DFID
+DFBnB
 with time
 no open
-R,_,R
-B,G,_
-G,B,X
+G,B,R
+_,G,_
+R,B,X
 Goal state:
 _,R,R
 B,B,_

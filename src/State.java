@@ -57,6 +57,7 @@ public class State implements Comparable<State>{
     }
     public void setHursticValue(int hursticValue){
         this.hursticValue=hursticValue;
+        setF(this.hursticValue+this.cost);
     }
     public boolean getIsOut(){
         return isOut;

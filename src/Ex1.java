@@ -369,8 +369,132 @@ public class Ex1 {
 
 
     public static void DFBnB(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
+        int numberOfVertices=0;
+        Stack<State> stack=new Stack<>();
+        HashMap<State,State> hashMap=new HashMap<>();
+        int thresHold=45;
+        State result=null;
+        State initialState = new State(board, 0, "");
+        stack.add(initialState);
+        hashMap.put(initialState,initialState);
+        while (!stack.isEmpty())
+        {
+            State currentState=stack.pop();
+            if(currentState.getIsOut()){
+                hashMap.remove(currentState,currentState);
+            }
+            else{
+                currentState.setOut();
+                stack.add(currentState);
+                ArrayList<State> nodes=new ArrayList<>();
+                // Explore opertion for each cell
+                for (int i = 0; i <3 ; i++) {
+                    for (int j = 0; j <3 ; j++) {
+                        Point currentPosition=new Point(i,j);
 
+                        // Skip if the target cell isn't a marble.
+                        if (currentState.getBoard()[i][j] == 'X' ||currentState.getBoard()[i][j]=='_')
+                        {
+                            continue;
+                        }
+
+                        Point left = new Point((i - 1 + 3) % 3, j);  // Left neighbor
+                        Point right = new Point((i + 1) % 3, j);     // Right neighbor
+                        Point up = new Point(i, (j + 1) % 3);        // Up neighbor
+                        Point down = new Point(i, (j - 1 + 3) % 3);  // Down neighbor
+                        ArrayList<Point> points=new ArrayList<>();
+                        points.add(left);
+                        points.add(up);
+                        points.add(right);
+                        points.add(down);
+
+                        for(Point p:points)     // checking all the possible direction for each coordinate in the board
+                        {
+                            if(currentState.getValue(p)!='_'){
+                                continue;
+                            }
+
+                            //check if it a revers action if it skip the action
+                            if(currentState.isReversedAction(i,j,p)){
+                                continue;
+                            }
+                            // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
+                            char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
+                            // update the number of vertices
+                            int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
+                            String newAction= currentState.getActions();
+                            if (newAction!="")
+                            {
+                                newAction+="--";
+                            }
+                            newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
+                                    +currentState.getValue(currentPosition)
+                                    +":("+ (p.x+1) +","+ (p.y+1) + ")";
+                            State newState=new State(newBoard,newCost,newAction);
+                            newState.setLastAction(i,j,p);
+                            newState.setHursticValue(hurstic(newState.getBoard(),goalBoard));
+                            numberOfVertices++;
+                            nodes.add(newState);
+
+                            }
+                        }
+                    }
+                Comparator<State> compere=new Comparator<State>() {
+                    @Override
+                    public int compare(State o1, State o2) {
+                        return Integer.compare(o1.getF(),o2.getF());
+                    }
+                };
+                nodes.sort(compere);
+                int i=0;
+                while (i<nodes.size()){
+                    State node=nodes.get(i);
+                    i++;
+                    if(node.getF()>=thresHold){
+                        nodes.clear();
+                    }
+                    else if(hashMap.containsKey(node) && node.getIsOut()==true){
+                        nodes.remove(node);
+                        i--;
+                    }
+                    else if(hashMap.containsKey(node) && node.getIsOut()==false){
+                        if(hashMap.get(node).getF()<=node.getF()){
+                            nodes.remove(node);
+                            i--;
+                        }
+                        else {
+                            stack.remove(hashMap.get(node));
+                            hashMap.remove(node,node);
+                        }
+                    }
+                    else if(Arrays.deepEquals(node.getBoard(),goalBoard)){
+                        result=new State(node.getBoard(),node.getCost(),node.getActions());
+                        thresHold=node.getF();
+                        nodes.clear();
+                    }
+
+                }
+                List<State> reversed=nodes.reversed();
+                for(State node:reversed){
+                    stack.add(node);
+                    hashMap.put(node,node);
+                }
+
+            }
         }
+        if(result==null){
+            writer.write("no path\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: inf\n");
+            writer.flush();
+        }
+        else {
+            writer.write(result.getActions()+"\n");
+            writer.write("Num: " + numberOfVertices + "\n");
+            writer.write("Cost: "+result.getCost() +"\n");
+            writer.flush();
+        }
+    }
 
 
 

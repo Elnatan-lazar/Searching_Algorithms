@@ -1,9 +1,9 @@
 DFBnB
 with time
 no open
-G,B,R
-_,G,_
-R,B,X
+_,B,R
+G,G,_
+B,R,X
 Goal state:
 _,R,R
 B,B,_

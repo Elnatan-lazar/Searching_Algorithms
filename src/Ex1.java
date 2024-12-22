@@ -372,7 +372,7 @@ public class Ex1 {
         int numberOfVertices=0;
         Stack<State> stack=new Stack<>();
         HashMap<State,State> hashMap=new HashMap<>();
-        int thresHold=45;
+        int thresHold=Integer.MAX_VALUE;
         State result=null;
         State initialState = new State(board, 0, "");
         stack.add(initialState);
@@ -449,15 +449,15 @@ public class Ex1 {
                 int i=0;
                 while (i<nodes.size()){
                     State node=nodes.get(i);
-                    i++;
+
                     if(node.getF()>=thresHold){
-                        nodes.clear();
+                        nodes.subList(i, nodes.size()).clear();
                     }
-                    else if(hashMap.containsKey(node) && node.getIsOut()==true){
+                    else if(hashMap.containsKey(node) && hashMap.get(node).getIsOut()){
                         nodes.remove(node);
                         i--;
                     }
-                    else if(hashMap.containsKey(node) && node.getIsOut()==false){
+                    else if(hashMap.containsKey(node) && !hashMap.get(node).getIsOut()){
                         if(hashMap.get(node).getF()<=node.getF()){
                             nodes.remove(node);
                             i--;
@@ -472,6 +472,7 @@ public class Ex1 {
                         thresHold=node.getF();
                         nodes.clear();
                     }
+                    i++;
 
                 }
                 List<State> reversed=nodes.reversed();

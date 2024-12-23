@@ -1,9 +1,9 @@
-A*
+IDA*
 with time
 no open
-_,B,R
-G,G,_
-B,R,X
+R,_,R
+B,G,_
+G,B,X
 Goal state:
 _,R,R
 B,B,_

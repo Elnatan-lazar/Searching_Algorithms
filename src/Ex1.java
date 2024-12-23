@@ -10,7 +10,7 @@ import java.util.List;
 public class Ex1 {
     static final Map<Character, Integer> costTable = new HashMap<>();
 
-    // Static block to initialize the cost table
+    // initialize the cost table
     static {
         costTable.put('B', 1); // Blue
         costTable.put('G', 3); // Green
@@ -59,17 +59,52 @@ public class Ex1 {
             goalBoard[2][i] = goalLine3[i].charAt(0);
         }
         String outputFile = "output.txt";
-
-
-
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+        int [] blocks1=new int[5];
+        int [] blocks2=new int[5];
+        Map<Character, Integer> indexTable = new HashMap<>();
+
+
+        indexTable.put('B', 0); // Blue
+        indexTable.put('G', 1); // Green
+        indexTable.put('R', 2); // Red
+        indexTable.put('X', 3); // Block
+        indexTable.put('_', 4); // Block
+
+        // check if goal board and the input bord are the sme in the espect of number of marble by colors;
+        for (int i = 0; i <3 ; i++) {
+            for (int j = 0; j <3 ; j++) {
+                blocks1[indexTable.get(board[i][j])]++;
+                blocks2[indexTable.get(goalBoard[i][j])]++;
+
+            }
+        }
+
+        for (int i = 0; i <5 ; i++) {
+            if(blocks1[i]!=blocks2[i]){
+                writer.write("no path\n");
+                writer.write("Num: " + 0 + "\n");
+                writer.write("Cost: inf\n");
+                if(time){
+                    writer.write("0 seconds"); // writing the time in the forth row
+                }
+                writer.flush();
+                return;
+            }
+        }
+
         long startTime = System.currentTimeMillis();
+
 
         // in case we got lucky and the input is the answer
         if (Arrays.deepEquals(board, goalBoard)) {
             writer.write("\n");
             writer.write("Num: " + 0 + "\n");
             writer.write("Cost: " +0 + "\n");
+            if(time){
+                writer.write("0 seconds"); // writing the time in the forth row
+
+            }
             writer.flush();
             return;
         }
@@ -94,7 +129,7 @@ public class Ex1 {
             writer.write(elapsedTimeSeconds+" seconds"); // writing the time in the forth row
             writer.flush();
         }
-        System.out.println(writer);
+
 
 
 
@@ -116,6 +151,7 @@ public class Ex1 {
         return  cost;
     }
 
+
     public static void BFS(BufferedWriter writer,char[][] board,char[][] goalBoard,boolean withoOpenList) throws IOException {
         int numberOfVertices = 0;
         // BFS setup
@@ -125,7 +161,7 @@ public class Ex1 {
 
 
         // Initial state
-        State initialState = new State(board, 0, "");
+        State initialState = new State(board, 0);
         queue.add(initialState);
 
 
@@ -168,6 +204,7 @@ public class Ex1 {
 
                     for(Point p:points)     // checking all the possible direction for each coordinate in the board
                     {
+
                         if(currentState.getValue(p)!='_'){
                             continue;
                         }
@@ -176,19 +213,13 @@ public class Ex1 {
                         if(currentState.isReversedAction(i,j,p)){
                             continue;
                         }
+
                         // if the position in point p (left/right/upd/down to (i,j) is open add the new state with the new calculation
                         char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
                         // update the number of vertices
                         int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
-                        String newAction= currentState.getActions();
-                        if (newAction!="")
-                        {
-                            newAction+="--";
-                        }
-                        newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
-                                +currentState.getValue(currentPosition)
-                                +":("+ (p.x+1) +","+ (p.y+1) + ")";
-                        State newState=new State(newBoard,newCost,newAction);
+
+                        State newState=new State(newBoard,newCost,currentState);
                         newState.setLastAction(i,j,p);
                         numberOfVertices++;
 
@@ -197,7 +228,7 @@ public class Ex1 {
 
                             if(Arrays.deepEquals(newBoard, goalBoard))  // if we reach to the goal
                             {
-                                writer.write(newState.getActions() + "\n");
+                                writer.write(newState.getPathString() + "\n");
                                 writer.write("Num: " + numberOfVertices + "\n");
                                 writer.write("Cost: " + newState.getCost() + "\n");
                                 writer.flush();
@@ -228,7 +259,7 @@ public class Ex1 {
         for (int depth = 1; depth <Integer.MAX_VALUE ; depth++)
         {
 
-            State initialState = new State(board, 0, "");
+            State initialState = new State(board, 0);
             Set<State> HashTable=new HashSet<>();
 
             //0 == cutoff
@@ -255,7 +286,7 @@ public class Ex1 {
 
         if(Arrays.deepEquals(currentState.getBoard(), goalBoard))  // if we reach to the goal
         {
-            writer.write(currentState.getActions() + "\n");
+            writer.write(currentState.getPathString() + "\n");
             writer.write("Num: " + (State.genrealIndex-1) + "\n");
             writer.write("Cost: " + currentState.getCost() + "\n");
             writer.flush();
@@ -309,15 +340,8 @@ public class Ex1 {
                     char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
                     // update the number of vertices
                     int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
-                    String newAction= currentState.getActions();
-                    if (newAction!="")
-                    {
-                        newAction+="--";
-                    }
-                    newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
-                            +currentState.getValue(currentPosition)
-                            +":("+ (p.x+1) +","+ (p.y+1) + ")";
-                    State newState=new State(newBoard,newCost,newAction);
+
+                    State newState=new State(newBoard,newCost,currentState);
                     newState.setLastAction(i,j,p);
 
                     if(HashTable.contains(newState))
@@ -361,7 +385,13 @@ public class Ex1 {
         Comparator<State> compere=new Comparator<State>() {
             @Override
             public int compare(State o1, State o2) {
-                return Integer.compare(o1.getF(),o2.getF());
+                int F1=hurstic(o1.getBoard(),goalBoard)+o1.getCost();
+                int F2=hurstic(o2.getBoard(),goalBoard)+o2.getCost();
+                int comp= Integer.compare(F1,F2);
+                if(comp==0){
+                    return Integer.compare(o1.getIndex(), o2.getIndex());
+                }
+                return comp;
             }
         };
 
@@ -369,8 +399,7 @@ public class Ex1 {
         HashMap<State, State> closeList = new HashMap<>();
         HashMap<State, State> openList= new HashMap<>();
 
-        State initialState = new State(board, 0, "");
-        initialState.setHursticValue(hurstic(board,goalBoard));
+        State initialState = new State(board, 0);
         queue.add(initialState);
         openList.put(initialState,initialState);
         while (!queue.isEmpty()) {
@@ -386,7 +415,7 @@ public class Ex1 {
             openList.remove(currentState);
             closeList.put(currentState,currentState);
             if(Arrays.deepEquals(currentState.getBoard(),goalBoard)){
-                writer.write(currentState.getActions()+"\n");
+                writer.write(currentState.getPathString()+"\n");
                 writer.write("Num: " + numberOfVertices + "\n");
                 writer.write("Cost: "+currentState.getCost()+"\n");
                 writer.flush();
@@ -426,16 +455,9 @@ public class Ex1 {
                                 char[][] newBoard = currentState.copyBoardWithSwap(currentPosition, p);
                                 // update the number of vertices
                                 int newCost = currentState.getCost() + costTable.get(currentState.getValue(currentPosition));
-                                String newAction = currentState.getActions();
-                                if (newAction != "") {
-                                    newAction += "--";
-                                }
-                                newAction += "(" + (currentPosition.x + 1) + "," + (currentPosition.y + 1) + "):"
-                                        + currentState.getValue(currentPosition)
-                                        + ":(" + (p.x + 1) + "," + (p.y + 1) + ")";
-                                State newState = new State(newBoard, newCost, newAction);
+
+                                State newState = new State(newBoard, newCost, currentState);
                                 newState.setLastAction(i, j, p);
-                                newState.setHursticValue(hurstic(newState.getBoard(), goalBoard));
                                 numberOfVertices++;
 
                                 if(closeList.containsKey(newState) ){
@@ -475,8 +497,7 @@ public class Ex1 {
         Stack<State> stack = new Stack<>();
         HashMap<State, State> hashMap = new HashMap<>();
         int thresHold = hurstic(goalBoard, goalBoard);
-        State initialState = new State(board, 0, "");
-        initialState.setHursticValue(hurstic(board,goalBoard));
+        State initialState = new State(board, 0);
         while (thresHold != Integer.MAX_VALUE) {
 
             if(withoOpenList){
@@ -533,16 +554,9 @@ public class Ex1 {
                                 char[][] newBoard = currentState.copyBoardWithSwap(currentPosition, p);
                                 // update the number of vertices
                                 int newCost = currentState.getCost() + costTable.get(currentState.getValue(currentPosition));
-                                String newAction = currentState.getActions();
-                                if (newAction != "") {
-                                    newAction += "--";
-                                }
-                                newAction += "(" + (currentPosition.x + 1) + "," + (currentPosition.y + 1) + "):"
-                                        + currentState.getValue(currentPosition)
-                                        + ":(" + (p.x + 1) + "," + (p.y + 1) + ")";
-                                State newState = new State(newBoard, newCost, newAction);
+
+                                State newState = new State(newBoard, newCost, currentState);
                                 newState.setLastAction(i, j, p);
-                                newState.setHursticValue(hurstic(newState.getBoard(), goalBoard));
                                 numberOfVertices++;
                                 nodes.add(newState);
 
@@ -551,15 +565,16 @@ public class Ex1 {
                     }
 
                     for (State node:nodes) {
-
-                        if (node.getF() > thresHold) {
-                            minF=Integer.min(minF,node.getF());
+                        int F_NODE=hurstic(node.getBoard(),goalBoard)+node.getCost();
+                        if (F_NODE > thresHold) {
+                            minF=Integer.min(minF,F_NODE);
                             continue;
                         }
                         if (hashMap.containsKey(node) && hashMap.get(node).getIsOut()) {
                             continue;
                         } else if (hashMap.containsKey(node) && !hashMap.get(node).getIsOut()) {
-                            if (hashMap.get(node).getF()> node.getF()) {
+                            int F_NODE2=hurstic(hashMap.get(node).getBoard(),goalBoard)+hashMap.get(node).getCost();
+                            if (F_NODE2> F_NODE) {
                                 stack.remove(hashMap.get(node));
                                 hashMap.remove(node, node);
                             } else {
@@ -568,7 +583,15 @@ public class Ex1 {
                             }
                         }
                         if (Arrays.deepEquals(node.getBoard(), goalBoard)) {
-                            writer.write(node.getActions() + "\n");
+                            String ans=node.getActions();
+                            while (!stack.isEmpty()){
+                                State temp=stack.pop();
+                                if(temp.getIsOut()==true&&temp.getPerent()!=null){
+                                    ans=temp.getActions()+"--"+ans;
+                                }
+
+                            }
+                            writer.write(ans + "\n");
                             writer.write("Num: " + numberOfVertices + "\n");
                             writer.write("Cost: " + node.getCost() + "\n");
                             writer.flush();
@@ -583,9 +606,7 @@ public class Ex1 {
                 }
             }
             thresHold=minF;
-            if(thresHold==Integer.MAX_VALUE){
-                System.out.println("123");
-            }
+
             }
 
             writer.write("no path\n");
@@ -605,7 +626,7 @@ public class Ex1 {
         HashMap<State,State> hashMap=new HashMap<>();
         int thresHold=Integer.MAX_VALUE;
         State result=null;
-        State initialState = new State(board, 0, "");
+        State initialState = new State(board, 0);
         stack.add(initialState);
         hashMap.put(initialState,initialState);
         while (!stack.isEmpty())
@@ -660,17 +681,9 @@ public class Ex1 {
                             char [][]newBoard= currentState.copyBoardWithSwap(currentPosition,p);
                             // update the number of vertices
                             int newCost=currentState.getCost()+costTable.get(currentState.getValue(currentPosition));
-                            String newAction= currentState.getActions();
-                            if (newAction!="")
-                            {
-                                newAction+="--";
-                            }
-                            newAction+="("+ (currentPosition.x+1) +","+ (currentPosition.y+1)  + "):"
-                                    +currentState.getValue(currentPosition)
-                                    +":("+ (p.x+1) +","+ (p.y+1) + ")";
-                            State newState=new State(newBoard,newCost,newAction);
+
+                            State newState=new State(newBoard,newCost,currentState);
                             newState.setLastAction(i,j,p);
-                            newState.setHursticValue(hurstic(newState.getBoard(),goalBoard));
                             numberOfVertices++;
                             nodes.add(newState);
 
@@ -680,15 +693,21 @@ public class Ex1 {
                 Comparator<State> compere=new Comparator<State>() {
                     @Override
                     public int compare(State o1, State o2) {
-                        return Integer.compare(o1.getF(),o2.getF());
+                        int F1=hurstic(o1.getBoard(),goalBoard)+o1.getCost();
+                        int F2=hurstic(o2.getBoard(),goalBoard)+o2.getCost();
+                        int comp= Integer.compare(F1,F2);
+                        if(comp==0){
+                            return Integer.compare(o1.getIndex(),o2.getIndex());
+                        }
+                        return comp;
                     }
                 };
                 nodes.sort(compere);
                 int i=0;
                 while (i<nodes.size()){
                     State node=nodes.get(i);
-
-                    if(node.getF()>=thresHold){
+                    int F_NODE=hurstic(node.getBoard(),goalBoard)+node.getCost();
+                    if(F_NODE>=thresHold){
                         nodes.subList(i, nodes.size()).clear();
                     }
                     else if(hashMap.containsKey(node) && hashMap.get(node).getIsOut()){
@@ -696,7 +715,8 @@ public class Ex1 {
                         i--;
                     }
                     else if(hashMap.containsKey(node) && !hashMap.get(node).getIsOut()){
-                        if(hashMap.get(node).getF()<=node.getF()){
+                        int F_NODE2=hurstic(hashMap.get(node).getBoard(),goalBoard)+hashMap.get(node).getCost();
+                        if(F_NODE2<=F_NODE){
                             nodes.remove(node);
                             i--;
                         }
@@ -706,8 +726,8 @@ public class Ex1 {
                         }
                     }
                     else if(Arrays.deepEquals(node.getBoard(),goalBoard)){
-                        result=new State(node.getBoard(),node.getCost(),node.getActions());
-                        thresHold=node.getF();
+                        result=node;
+                        thresHold=F_NODE;
                         nodes.clear();
                     }
                     i++;
@@ -728,7 +748,7 @@ public class Ex1 {
             writer.flush();
         }
         else {
-            writer.write(result.getActions()+"\n");
+            writer.write(result.getPathString()+"\n");
             writer.write("Num: " + numberOfVertices + "\n");
             writer.write("Cost: "+result.getCost() +"\n");
             writer.flush();
@@ -736,17 +756,4 @@ public class Ex1 {
     }
 
 
-
-
-
-
-
-    public static void printBoard(char[][] board) {
-        for (char[] row : board) {
-            for (char cell : row) {
-                System.out.print(cell + " ");
-            }
-            System.out.println();
-        }
-    }
 }

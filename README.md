@@ -211,12 +211,9 @@ This heuristic is admissible because it never overestimates the true cost.
 
 # Known Limitations
 
-- A* implementation is incomplete.
-- DFID and DFBnB are not implemented.
 - Program expects fixed file names:
   - `input.txt`
   - `output.txt`
-- Must run in the same directory (no `src` folder structure).
 
 ---
 

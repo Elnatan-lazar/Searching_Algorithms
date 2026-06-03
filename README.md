@@ -10,9 +10,9 @@ The goal is to transform a **start configuration** into a **goal configuration**
 
 - ✅ **BFS (Breadth-First Search)**
 - ✅ **IDA\*** (Iterative Deepening A*)
-- ⚠️ **DFID** – Skeleton only
-- ⚠️ **A\*** – Not fully implemented
-- ⚠️ **DFBnB** – Skeleton only
+- ✅ **DFID** 
+- ✅ **A\*** 
+- ✅ **DFBnB**  
 
 ---
 
